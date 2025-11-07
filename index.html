@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Socia — Learn. Create. Collaborate. Grow.</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Splash / Intro -->
+  <section class="screen screen--active" id="screen-splash" data-screen="splash">
+    <div class="splash-logo">
+      <div class="logo-orb"></div>
+      <h1 class="wordmark">Socia</h1>
+    </div>
+    <div class="intro-slides">
+      <div class="slide">Showcase every talent without noise</div>
+      <div class="slide">Connect with creators who match your vibe</div>
+      <div class="slide">Grow through real projects, not algorithms</div>
+    </div>
+    <button class="cta" data-nav="signup">Begin your journey</button>
+  </section>
+
+  <!-- Auth -->
+  <section class="screen" id="screen-auth" data-screen="auth" aria-labelledby="auth-title">
+    <h2 id="auth-title" class="h2">Let's build your creative universe</h2>
+    <form class="card form" onsubmit="return false;">
+      <label>Email
+        <input type="email" placeholder="you@socia.app" required/>
+      </label>
+      <button class="btn btn--primary" data-nav="home">Continue with Email</button>
+      <button class="btn btn--ghost" title="Mock Google sign-in" data-nav="home">Continue with Google</button>
+    </form>
+
+    <div class="card chip-group">
+      <div class="hint">Pick your passions</div>
+      <div class="chips" id="skillChips">
+        <!-- chips injected by JS -->
+      </div>
+    </div>
+
+    <div class="card pref-group">
+      <div class="hint">Feed preferences</div>
+      <div class="checkboxes">
+        <label><input type="checkbox" checked/> Inspiration</label>
+        <label><input type="checkbox"/> Learning</label>
+        <label><input type="checkbox" checked/> Collabs</label>
+        <label><input type="checkbox"/> Portfolio focus</label>
+      </div>
+    </div>
+
+    <div class="auth-actions">
+      <button class="btn btn--primary" data-nav="home">Enter Socia</button>
+      <button class="btn btn--ghost" data-nav="splash">Back</button>
+    </div>
+  </section>
+
+  <!-- App Shell -->
+  <div class="app-shell">
+    <!-- Desktop Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo-orb small"></div>
+        <span>Socia</span>
+      </div>
+      <nav class="side-nav">
+        <button class="nav-link active" data-screen-target="home">Home</button>
+        <button class="nav-link" data-screen-target="explore">Explore</button>
+        <button class="nav-link" data-screen-target="collab">Collab Hub</button>
+        <button class="nav-link" data-screen-target="create">Create</button>
+        <button class="nav-link" data-screen-target="profile">Profile</button>
+        <button class="nav-link" data-screen-target="settings">Settings</button>
+      </nav>
+    </aside>
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="searchbar">
+        <input type="search" placeholder="Search creators, projects, skills…"/>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" title="Notifications">🔔</button>
+        <button class="icon-btn" title="Messages">💬</button>
+        <div class="avatar" title="You">🟣</div>
+      </div>
+    </header>
+
+    <!-- Screens -->
+    <main class="content">
+
+      <!-- Home Feed -->
+      <section class="panel panel--active" id="panel-home" aria-labelledby="home-title">
+        <h2 id="home-title" class="h2">Home</h2>
+        <div class="tabs" id="homeTabs">
+          <button class="tab active" data-feed="all">All</button>
+          <button class="tab" data-feed="art">Art</button>
+          <button class="tab" data-feed="code">Code</button>
+          <button class="tab" data-feed="photo">Photo</button>
+          <button class="tab" data-feed="music">Music</button>
+          <button class="tab" data-feed="writing">Writing</button>
+        </div>
+        <div class="grid posts" id="feedGrid">
+          <!-- posts injected by JS -->
+        </div>
+      </section>
+
+      <!-- Explore -->
+      <section class="panel" id="panel-explore" aria-labelledby="explore-title">
+        <h2 id="explore-title" class="h2">Explore</h2>
+        <div class="cat-bubbles" id="catBubbles">
+          <!-- bubbles injected by JS -->
+        </div>
+        <div class="grid tiles" id="exploreGrid">
+          <!-- explore items injected by JS -->
+        </div>
+      </section>
+
+      <!-- Collab Hub -->
+      <section class="panel" id="panel-collab" aria-labelledby="collab-title">
+        <h2 id="collab-title" class="h2">Collaboration Hub</h2>
+        <div class="filters">
+          <select id="filter-skill"><option>All skills</option></select>
+          <select id="filter-level">
+            <option>Any level</option><option>Beginner</option><option>Intermediate</option><option>Advanced</option>
+          </select>
+          <select id="filter-duration">
+            <option>Any duration</option><option>1-2 weeks</option><option>1 month</option><option>3+ months</option>
+          </select>
+          <select id="filter-remote">
+            <option>Anywhere</option><option>Remote</option><option>Onsite</option>
+          </select>
+        </div>
+        <div class="list collab-list" id="collabList">
+          <!-- collab cards injected by JS -->
+        </div>
+      </section>
+
+      <!-- Create Post -->
+      <section class="panel" id="panel-create" aria-labelledby="create-title">
+        <h2 id="create-title" class="h2">Create a Post</h2>
+        <form class="card form create-form" onsubmit="return false;">
+          <label>Upload
+            <input type="file" accept="image/*,.png,.jpg,.jpeg,.gif"/>
+          </label>
+          <label>Title
+            <input type="text" placeholder="Give it a title"/>
+          </label>
+          <label>Short description
+            <textarea rows="3" placeholder="What’s the story?"></textarea>
+          </label>
+          <label>Workspace skill
+            <select id="post-skill"></select>
+          </label>
+          <label>Progress
+            <select>
+              <option>Beginner</option>
+              <option>Improving</option>
+              <option>Final work</option>
+            </select>
+          </label>
+          <div class="row">
+            <button class="btn btn--primary" id="fakePublish">Publish (demo)</button>
+            <span class="muted">Posts are local-only in this prototype.</span>
+          </div>
+        </form>
+      </section>
+
+      <!-- Profile -->
+      <section class="panel" id="panel-profile" aria-labelledby="profile-title">
+        <h2 id="profile-title" class="h2">Your Profile</h2>
+        <div class="profile-head card">
+          <div class="avatar xl">🟣</div>
+          <div class="ph-meta">
+            <div class="title">@ayuu • Creative generalist</div>
+            <div class="chips" id="profileSkills"></div>
+          </div>
+        </div>
+        <div class="workspace-tabs" id="workspaceTabs">
+          <!-- workspace tabs injected by JS -->
+        </div>
+        <div class="grid posts" id="workspaceGrid">
+          <!-- workspace posts injected by JS -->
+        </div>
+        <div class="growth card">
+          <h3 class="h3">Recognition • Growth</h3>
+          <div class="stats">
+            <div class="stat"><span>🔥 Streak</span><strong>7 days</strong></div>
+            <div class="stat"><span>⭐ Collab badges</span><strong>4</strong></div>
+            <div class="stat"><span>📈 Skill progress</span>
+              <div class="bars">
+                <div class="bar"><span>Art</span><i style="--p:72%"></i></div>
+                <div class="bar"><span>Code</span><i style="--p:65%"></i></div>
+                <div class="bar"><span>Photo</span><i style="--p:40%"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section class="panel" id="panel-settings" aria-labelledby="settings-title">
+        <h2 id="settings-title" class="h2">Settings</h2>
+        <div class="card form">
+          <label>Display name
+            <input type="text" value="Ayuu"/>
+          </label>
+          <label>Bio
+            <textarea rows="2" placeholder="Short bio…">Curious builder. Learning in public.</textarea>
+          </label>
+          <label>Notifications
+            <select><option>Smart</option><option>All</option><option>Quiet</option></select>
+          </label>
+          <button class="btn btn--ghost">Logout</button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Nav (mobile) -->
+    <nav class="bottom-nav" role="navigation" aria-label="Primary">
+      <button class="bn-link active" data-screen-target="home">🏠<span>Home</span></button>
+      <button class="bn-link" data-screen-target="explore">🔎<span>Explore</span></button>
+      <button class="bn-link" data-screen-target="collab">🤝<span>Collab</span></button>
+      <button class="bn-link" data-screen-target="create">➕<span>Create</span></button>
+      <button class="bn-link" data-screen-target="profile">👤<span>Profile</span></button>
+    </nav>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
