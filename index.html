@@ -1,284 +1,428 @@
 <!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Socia — Creative Calm</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Socia — Web3 Neon</title>
 
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-  <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
-  <!-- Neon page glow -->
-  <div class="neon-backdrop"></div>
+    <!-- Ambient Neon Field -->
+    <div class="neon-backdrop"></div>
+    <div class="neon-orb orb-a"></div>
+    <div class="neon-orb orb-b"></div>
+    <div class="neon-scanline"></div>
 
-  <div class="app">
-
-    <!-- Sidebar (desktop) -->
-    <aside class="sidebar" data-role="sidebar">
-      <div class="brand">
-        <div class="logo glow-pop">S</div>
-       
-        
-        <div>
-          <div class="brand-title">Socia</div>
-          <div class="brand-sub">Creative calm</div>
-        </div>
-      </div>
-
-      <nav class="nav">
-        <button class="nav-btn active" data-go="home">
-          <i data-lucide="home"></i><span>Home</span>
-        </button>
-        <button class="nav-btn" data-go="explore">
-          <i data-lucide="grid-3x3"></i><span>Explore</span>
-        </button>
-        <button class="nav-btn" data-go="collab">
-          <i data-lucide="users"></i><span>Collab Hub</span>
-        </button>
-        <button class="nav-btn" data-action="open-create">
-          <i data-lucide="plus-circle"></i><span>Create</span>
-        </button>
-        <button class="nav-btn" data-go="settings">
-          <i data-lucide="settings"></i><span>Settings</span>
-        </button>
-      </nav>
-
-      <div class="workspaces">
-        <div class="ws-heading">Workspaces</div>
-        <div class="ws-list" id="workspaceList"></div>
-      </div>
-    </aside>
-
-    <!-- Main -->
-    <main class="main">
-
-      <!-- Splash -->
-      <section class="screen center splash" id="screen-splash" data-screen active>
-        <div class="splash-wrap">
-          <div class="socia-badge rainbow-glow">Socia</div>
-          <h1 class="headline">Showcase every talent without noise</h1>
-          <p class="subhead">Connect with creators who match your vibe. Grow through real projects, not algorithms.</p>
-          <div class="row gap">
-            <button class="btn primary pill" data-go="onboarding">Begin your journey</button>
-            <button class="btn ghost pill">Learn more</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Onboarding -->
-      <section class="screen" id="screen-onboarding" data-screen>
-        <div class="grid two">
-          <div class="card glass floaty">
-            <h2>Create your account</h2>
-            <p class="muted">Select the skills you want to showcase and the feed you want.</p>
-            <div class="stack gap">
-              <input class="input pill" placeholder="Email" />
-              <div>
-                <div class="label">Choose skills</div>
-                <div class="chips" id="onbSkills"></div>
-              </div>
-              <div>
-                <div class="label">Feed preferences</div>
-                <div class="chips">
-                  <button class="chip pill">Inspiration</button>
-                  <button class="chip pill">Learning</button>
-                  <button class="chip pill">Collabs</button>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo glow-pop">S</div>
+                <div>
+                    <div class="brand-title socia-neon">Socia</div>
+                    <div class="brand-sub">Web3 Neon for Creators</div>
                 </div>
-              </div>
-              <div class="row gap">
-                <button class="btn primary pill" data-go="home">Continue</button>
-                <button class="btn outline pill" data-go="splash">Back</button>
-              </div>
             </div>
-          </div>
-          <div class="card glass floaty hide-sm">
-            <h3>Why Socia?</h3>
-            <ul class="muted bullets">
-              <li>Niche workspaces so your profile stays focused.</li>
-              <li>Community-driven collabs & verified badges.</li>
-              <li>Calm, curated feeds — no clout-chasing.</li>
-            </ul>
-            <div class="mock glow-border">Showcase mock</div>
-          </div>
-        </div>
-      </section>
 
-      <!-- Home -->
-      <section class="screen" id="screen-home" data-screen>
-        <div class="bar">
-          <div class="row gap">
-            <h2 class="bar-title">Home</h2>
-            <span class="muted" id="homeSkillLabel">All skills</span>
-          </div>
-          <div class="row gap">
-            <input class="input pill hide-xs" style="width: 260px" placeholder="Search creators or projects" />
-            <button class="btn soft pill">Filter</button>
-          </div>
-        </div>
-        <div class="grid cards" id="homeGrid"></div>
-      </section>
-
-      <!-- Explore -->
-      <section class="screen" id="screen-explore" data-screen>
-        <div class="bar">
-          <h2 class="bar-title">Explore</h2>
-          <input class="input pill" style="width: 260px" placeholder="Search skill or creator" />
-        </div>
-        <div class="grid cat" id="exploreCats"></div>
-        <div class="section">
-          <h3>Beginner Spotlight</h3>
-          <div class="grid cards" id="spotlightGrid"></div>
-        </div>
-      </section>
-
-      <!-- Collaboration Hub -->
-      <section class="screen" id="screen-collab" data-screen>
-        <div class="bar">
-          <h2 class="bar-title">Collaboration Hub</h2>
-          <span class="muted">Find projects or post a request</span>
-        </div>
-        <div class="grid two" id="collabGrid"></div>
-      </section>
-
-      <!-- Profile -->
-      <section class="screen" id="screen-profile" data-screen>
-        <div class="grid sidebar-two">
-          <aside>
-            <div class="card glass floaty center">
-              <div class="avatar rainbow-glow">U</div>
-              <div class="stack center">
-                <div class="title">Creator Name</div>
-                <div class="muted small">Videographer • 3y experience</div>
-              </div>
-              <div class="stack">
-                <div class="ws-heading">Workspaces</div>
-                <div class="chips" id="profileWS"></div>
-              </div>
-              <div class="row gap">
-                <button class="btn outline pill" data-go="explore"><i data-lucide="compass"></i>Discover</button>
-                <button class="btn primary pill" data-go="collab"><i data-lucide="rocket"></i>Hire me</button>
-              </div>
+            <!-- Workspace quick switch -->
+            <div class="ws-switcher">
+                <div class="label">Workspace</div>
+                <select id="wsSwitcher" class="input pill small-select"></select>
             </div>
-          </aside>
-          <div class="stack">
+
+            <nav class="nav">
+                <button class="nav-btn active" data-go="home"><i data-lucide="home"></i><span>Home</span></button>
+                <button class="nav-btn" data-go="explore"><i data-lucide="grid-3x3"></i><span>Explore</span></button>
+                <button class="nav-btn" data-go="collab"><i data-lucide="users"></i><span>Collab Hub</span></button>
+                <button class="nav-btn" data-go="match"><i data-lucide="sparkles"></i><span>Matchmaking</span></button>
+                <button class="nav-btn" data-go="dashboard"><i data-lucide="trophy"></i><span>Growth</span></button>
+                <button class="nav-btn" data-action="open-create"><i
+                        data-lucide="plus-circle"></i><span>Create</span></button>
+                <button class="nav-btn" data-go="settings"><i data-lucide="settings"></i><span>Settings</span></button>
+            </nav>
+
+            <div class="workspaces">
+                <div class="ws-heading">Your Workspaces</div>
+                <div class="ws-list" id="workspaceList"></div>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="main">
+
+            <!-- Splash / CTA -->
+            <section class="screen center splash" id="screen-splash" data-screen active>
+                <div class="splash-wrap">
+                    <div class="socia-badge rainbow-glow">Socia</div>
+                    <h1 class="headline">Own your creative journey — <span class="socia-neon">without the noise</span>
+                    </h1>
+                    <p class="subhead">Set intents. Build in public. Match with projects. Earn badges.</p>
+                    <div class="row gap">
+                        <button class="btn primary pill" data-go="onboarding">Begin your journey</button>
+                        <button class="btn ghost pill" data-go="explore">Peek inside</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Smart Onboarding (multi-step) -->
+            <section class="screen" id="screen-onboarding" data-screen>
+                <div class="card glass floaty">
+                    <div class="bar">
+                        <h2 class="bar-title">Smart Onboarding</h2>
+                        <span class="muted small" id="onbStepLabel">Step 1 of 3</span>
+                    </div>
+
+                    <div id="onbStep1" class="onb-step" data-step="1">
+                        <div class="label">Pick your intent (influences your feed)</div>
+                        <div class="chips" id="intentChips">
+                            <button class="chip pill" data-intent="Learn">Learn</button>
+                            <button class="chip pill" data-intent="Collab">Collab</button>
+                            <button class="chip pill" data-intent="Showcase">Showcase</button>
+                        </div>
+                        <div class="label" style="margin-top:12px">Select your core skills</div>
+                        <div class="chips" id="onbSkills"></div>
+                    </div>
+
+                    <div id="onbStep2" class="onb-step" data-step="2" hidden>
+                        <div class="label">Create your first workspaces</div>
+                        <div class="chips" id="onbWorkspaceChips"></div>
+                        <div class="label" style="margin-top:12px">Experience level</div>
+                        <div class="chips" id="onbLevel">
+                            <button class="chip pill" data-level="Beginner">Beginner</button>
+                            <button class="chip pill" data-level="Intermediate">Intermediate</button>
+                            <button class="chip pill" data-level="Pro">Pro</button>
+                        </div>
+                    </div>
+
+                    <div id="onbStep3" class="onb-step" data-step="3" hidden>
+                        <div class="label">Quick preferences</div>
+                        <div class="chips">
+                            <button class="chip pill" data-pref="Mentorship">Mentorship</button>
+                            <button class="chip pill" data-pref="Feedback Loops">Feedback Loops</button>
+                            <button class="chip pill" data-pref="Starter Projects">Starter Projects</button>
+                            <button class="chip pill" data-pref="Paid Work">Paid Work</button>
+                        </div>
+                        <div class="mock glow-border" style="margin-top:12px">We’ll tune your feed & matchmaking.</div>
+                    </div>
+
+                    <div class="row right gap" style="margin-top:12px">
+                        <button class="btn outline pill" data-action="onb-prev"><i
+                                data-lucide="chevron-left"></i>Back</button>
+                        <button class="btn primary pill" data-action="onb-next"><i
+                                data-lucide="chevron-right"></i>Next</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Home (Intent-based feed) -->
+            <section class="screen" id="screen-home" data-screen>
+                <div class="bar">
+                    <div class="row gap">
+                        <h2 class="bar-title">Home</h2>
+                        <span class="muted" id="homeSkillLabel">All skills</span>
+                    </div>
+                    <div class="row gap wrap">
+                        <div class="chips" id="feedIntents">
+                            <button class="chip pill active" data-intent="All">All</button>
+                            <button class="chip pill" data-intent="Learn">Learn</button>
+                            <button class="chip pill" data-intent="Collab">Collab</button>
+                            <button class="chip pill" data-intent="Showcase">Showcase</button>
+                        </div>
+                        <input class="input pill hide-xs" style="width:260px"
+                            placeholder="Search creators or projects" />
+                        <button class="btn soft pill" id="openTalentReq"><i data-lucide="megaphone"></i>Talent
+                            Request</button>
+                    </div>
+                </div>
+                <div class="grid cards" id="homeGrid">
+                    <!-- Card 1 -->
+                    <div class="card glass">
+                        <img src="https://media.istockphoto.com/id/1423343445/photo/close-up-of-steadicam-screens-with-female-model-using-laptop-by-table.jpg?s=1024x1024&w=is&k=20&c=tQbwtSmj0o91I8zYcDG5xU_YXHv8JJVWE5omOQDfbXQ="
+                            alt="Videography Showcase" class="card-img">
+                        <div class="muted small">Videography • Showcase</div>
+                        <h3>Showcase 1</h3>
+                        <p>A crisp, calm description that highlights the process and final touch.</p>
+                        <p class="muted">@creator1</p>
+                        <div class="row gap">
+                            <button class="icon-btn"><i data-lucide="heart"></i>177</button>
+                            <button class="icon-btn"><i data-lucide="message-circle"></i>Comment</button>
+                            <button class="icon-btn"><i data-lucide="bookmark"></i>Save</button>
+                        </div>
+                        <button class="btn outline pill small">View Profile</button>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="card glass">
+                        <img src="images/photography.jpg" alt="Photography Showcase" class="card-img">
+                        <div class="muted small">Photography • Learn</div>
+                        <h3>Showcase 2</h3>
+                        <p>A crisp, calm description that highlights the process and final touch.</p>
+                        <p class="muted">@creator2</p>
+                        <div class="row gap">
+                            <button class="icon-btn"><i data-lucide="heart"></i>194</button>
+                            <button class="icon-btn"><i data-lucide="message-circle"></i>Comment</button>
+                            <button class="icon-btn"><i data-lucide="bookmark"></i>Save</button>
+                        </div>
+                        <button class="btn outline pill small">View Profile</button>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="card glass">
+                        <img src="images/coding.jpg" alt="Coding Collab" class="card-img">
+                        <div class="muted small">Coding • Collab</div>
+                        <h3>Showcase 3</h3>
+                        <p>A crisp, calm description that highlights the process and final touch.</p>
+                        <p class="muted">@creator3</p>
+                        <div class="row gap">
+                            <button class="icon-btn"><i data-lucide="heart"></i>149</button>
+                            <button class="icon-btn"><i data-lucide="message-circle"></i>Comment</button>
+                            <button class="icon-btn"><i data-lucide="bookmark"></i>Save</button>
+                            <button class="icon-btn"><i data-lucide="handshake"></i>collaborate</button>
+                        </div>
+                        <button class="btn outline pill small">View Profile</button>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Explore -->
+            <section class="screen" id="screen-explore" data-screen>
+                <div class="bar">
+                    <h2 class="bar-title">Explore</h2>
+                    <input class="input pill" style="width:260px" placeholder="Search skill or creator" />
+                </div>
+                <div class="grid cat" id="exploreCats"></div>
+                <div class="section">
+                    <h3>Beginner Spotlight</h3>
+                    <div class="grid cards" id="spotlightGrid"></div>
+                </div>
+            </section>
+
+            <!-- Collab Hub (beginner-friendly) -->
+            <section class="screen" id="screen-collab" data-screen>
+                <div class="bar">
+                    <h2 class="bar-title">Collaboration Hub</h2>
+                    <span class="muted">Mentor pings • Starter tasks • Safe scopes</span>
+                </div>
+                <div class="grid two" id="collabGrid"></div>
+            </section>
+
+            <!-- Matchmaking -->
+            <section class="screen" id="screen-match" data-screen>
+                <div class="bar">
+                    <h2 class="bar-title">Project Matchmaking</h2>
+                    <div class="row gap">
+                        <button class="btn primary pill" id="findMatches"><i data-lucide="sparkles"></i>Find
+                            Matches</button>
+                        <button class="btn outline pill" id="openTalentReq2"><i data-lucide="megaphone"></i>Post Talent
+                            Request</button>
+                    </div>
+                </div>
+                <div class="grid cards" id="matchGrid"></div>
+            </section>
+
+            <!-- Growth / Recognition -->
+            <section class="screen" id="screen-dashboard" data-screen>
+                <div class="bar">
+                    <h2 class="bar-title">Growth & Recognition</h2>
+                    <span class="muted">Badges, skills, momentum</span>
+                </div>
+
+                <div class="grid two">
+                    <div class="card glass floaty">
+                        <div class="title">Metrics</div>
+                        <div class="grid two stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-num" id="statViews">0</div>
+                                <div class="muted small">Profile views</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-num" id="statCollabs">0</div>
+                                <div class="muted small">Collabs</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-num" id="statSaves">0</div>
+                                <div class="muted small">Saves</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-num" id="statKudos">0</div>
+                                <div class="muted small">Kudos</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card glass floaty">
+                        <div class="title">Badges</div>
+                        <div class="badges" id="badgeWrap"></div>
+                    </div>
+                </div>
+
+                <div class="card glass floaty section">
+                    <div class="title">Skills</div>
+                    <div class="skills-cloud" id="skillsCloud"></div>
+                </div>
+            </section>
+
+            <!-- Profile (multi-workspace) -->
+            <section class="screen" id="screen-profile" data-screen>
+                <div class="grid sidebar-two">
+                    <aside>
+                        <div class="card glass floaty center">
+                            <div class="avatar rainbow-glow">U</div>
+                            <div class="stack center">
+                                <div class="title" id="profileName">Creator</div>
+                                <div class="muted small" id="profileRole">Multi-workspace creator</div>
+                            </div>
+                            <div class="stack">
+                                <div class="ws-heading">Workspaces</div>
+                                <div class="chips" id="profileWS"></div>
+                            </div>
+                            <div class="row gap">
+                                <button class="btn outline pill" data-go="explore"><i
+                                        data-lucide="compass"></i>Discover</button>
+                                <button class="btn primary pill" data-go="collab"><i data-lucide="rocket"></i>Hire
+                                    me</button>
+                            </div>
+                        </div>
+                    </aside>
+                    <div class="stack">
+                        <div class="bar">
+                            <h3>Portfolio</h3>
+                            <span class="muted">Recent works</span>
+                        </div>
+                        <div class="grid two" id="profilePortfolio"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings -->
+            <section class="screen" id="screen-settings" data-screen>
+                <div class="card glass floaty">
+                    <h3>Settings</h3>
+                    <div class="grid two">
+                        <div>
+                            <div class="label">Edit profile</div>
+                            <input class="input pill" placeholder="Display name" id="setName" />
+                            <textarea class="input" rows="4" placeholder="Short bio" id="setBio"></textarea>
+                        </div>
+                        <div>
+                            <div class="label">Workspace settings</div>
+                            <div class="chips" id="settingsWS"></div>
+                        </div>
+                    </div>
+                    <div class="row gap">
+                        <button class="btn primary pill" id="saveSettings">Save</button>
+                        <button class="btn outline pill" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Mobile bottom nav -->
+        <div class="mobile-nav">
+            <button class="mob-tab active" data-go="home">
+                <span class="mob-indicator"></span><i data-lucide="home"></i><span>Home</span>
+            </button>
+            <button class="mob-tab" data-go="explore">
+                <span class="mob-indicator"></span><i data-lucide="grid-3x3"></i><span>Explore</span>
+            </button>
+            <button class="fab neon-fab" data-action="open-create"><i data-lucide="plus-circle"></i></button>
+            <button class="mob-tab" data-go="collab">
+                <span class="mob-indicator"></span><i data-lucide="users"></i><span>Collab</span>
+            </button>
+            <button class="mob-tab" data-go="dashboard">
+                <span class="mob-indicator"></span><i data-lucide="trophy"></i><span>Growth</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Create Post Modal -->
+    <div class="modal" id="createModal" aria-hidden="true">
+        <div class="backdrop" data-action="close-modal"></div>
+        <div class="sheet card glass slide-up">
             <div class="bar">
-              <h3>Multi-Workspace</h3>
-              <span class="muted">Progress & projects</span>
+                <h3>Create Post</h3>
+                <button class="icon-btn pill" data-action="close-modal" aria-label="Close"><i
+                        data-lucide="x"></i></button>
             </div>
-            <div class="grid two">
-              <div class="card glass floaty">
-                <div class="title">Portfolio</div>
-                <div class="muted small">Projects, case studies and final works.</div>
-              </div>
-              <div class="card glass floaty">
-                <div class="title">Collab History</div>
-                <div class="muted small">Past collaborations and outcomes.</div>
-              </div>
+
+            <input class="input pill" placeholder="Title" id="createTitle" />
+            <textarea class="input" rows="3" placeholder="Short description" id="createDesc"></textarea>
+
+            <!-- Multi-file Upload -->
+            <div class="upload-box" id="uploadBox">
+                <div class="upload-placeholder" id="uploadPlaceholder">
+                    <i data-lucide="upload-cloud"></i>
+                    <p>Drag & drop files here<br />or click to browse</p>
+                    <div class="muted small">Images, videos, PDFs, docs, zips • up to 20MB each • max 10 files</div>
+                    <input type="file" id="fileInput" hidden multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.zip,.rar,.txt,.csv" />
+                    <div class="row center gap" style="margin-top:8px">
+                        <button class="btn outline pill" id="browseBtn"><i data-lucide="folder-open"></i>Choose
+                            files</button>
+                    </div>
+                </div>
+                <div class="upload-list" id="uploadList" hidden></div>
+                <div class="row right gap upload-actions" id="uploadActions" hidden>
+                    <button class="btn outline small pill" id="clearFilesBtn">Clear all</button>
+                </div>
             </div>
-          </div>
+
+            <div class="row gap wrap">
+                <select class="input pill" id="createWS"></select>
+                <select class="input pill" id="createProgress">
+                    <option>Progress: final</option>
+                    <option>Progress: improving</option>
+                    <option>Progress: beginner</option>
+                </select>
+                <select class="input pill" id="createIntent">
+                    <option>Intent: Showcase</option>
+                    <option>Intent: Learn</option>
+                    <option>Intent: Collab</option>
+                </select>
+            </div>
+
+            <div class="row right gap">
+                <button class="btn outline pill" data-action="close-modal">Cancel</button>
+                <button class="btn primary pill" id="postSubmitBtn"><i data-lucide="send"></i>Post</button>
+            </div>
         </div>
-      </section>
-
-      <!-- Settings -->
-      <section class="screen" id="screen-settings" data-screen>
-        <div class="card glass floaty">
-          <h3>Settings</h3>
-          <div class="grid two">
-            <div>
-              <div class="label">Edit profile</div>
-              <input class="input pill" placeholder="Display name" />
-              <textarea class="input" rows="4" placeholder="Short bio"></textarea>
-            </div>
-            <div>
-              <div class="label">Workspace settings</div>
-              <div class="chips" id="settingsWS"></div>
-            </div>
-          </div>
-          <div class="row gap">
-            <button class="btn primary pill">Save</button>
-            <button class="btn outline pill">Logout</button>
-          </div>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- Mobile bottom nav -->
-    <div class="mobile-nav" data-role="mobile-nav">
-      <button class="mob-tab active" data-go="home">
-        <span class="mob-indicator"></span>
-        <i data-lucide="home"></i><span>Home</span>
-      </button>
-      <button class="mob-tab" data-go="explore">
-        <span class="mob-indicator"></span>
-        <i data-lucide="grid-3x3"></i><span>Explore</span>
-      </button>
-      <button class="fab neon-fab" data-action="open-create"><i data-lucide="plus-circle"></i></button>
-      <button class="mob-tab" data-go="collab">
-        <span class="mob-indicator"></span>
-        <i data-lucide="users"></i><span>Collab</span>
-      </button>
-      <button class="mob-tab" data-go="profile">
-        <span class="mob-indicator"></span>
-        <i data-lucide="user"></i><span>Profile</span>
-      </button>
     </div>
-  </div>
 
-  <!-- Create Post Modal -->
-  <div class="modal" id="createModal" aria-hidden="true">
-    <div class="backdrop" data-action="close-modal"></div>
-    <div class="sheet card glass slide-up">
-      <div class="bar">
-        <h3>Create Post</h3>
-        <button class="icon-btn pill" data-action="close-modal" aria-label="Close"><i data-lucide="x"></i></button>
-      </div>
-
-      <input class="input pill" placeholder="Title" id="createTitle" />
-      <textarea class="input" rows="3" placeholder="Short description" id="createDesc"></textarea>
-
-      <!-- Multi-file Upload -->
-      <div class="upload-box" id="uploadBox">
-        <div class="upload-placeholder" id="uploadPlaceholder">
-          <i data-lucide="upload-cloud"></i>
-          <p>Drag & drop files here<br/>or click to browse</p>
-          <div class="muted small">Images, videos, PDFs, docs, zips • up to 20MB each • max 10 files</div>
-          <input type="file" id="fileInput" hidden multiple
-                 accept="image/*,video/*,.pdf,.doc,.docx,.zip,.rar,.txt,.csv" />
-          <div class="row center gap" style="margin-top:8px">
-            <button class="btn outline pill" id="browseBtn"><i data-lucide="folder-open"></i>Choose files</button>
-          </div>
+    <!-- Talent Request Modal -->
+    <div class="modal" id="talentModal" aria-hidden="true">
+        <div class="backdrop" data-action="close-talent"></div>
+        <div class="sheet card glass slide-up">
+            <div class="bar">
+                <h3>Post a Talent Request</h3>
+                <button class="icon-btn pill" data-action="close-talent" aria-label="Close"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <input class="input pill" placeholder="Role (e.g., Colorist for short film)" id="talRole" />
+            <input class="input pill" placeholder="Required skills (comma separated)" id="talSkills" />
+            <input class="input pill" placeholder="Budget (optional)" id="talBudget" />
+            <textarea class="input" rows="3" placeholder="Brief" id="talBrief"></textarea>
+            <div class="row right gap">
+                <button class="btn outline pill" data-action="close-talent">Cancel</button>
+                <button class="btn primary pill" id="talentSubmit"><i data-lucide="megaphone"></i>Post Request</button>
+            </div>
         </div>
-
-        <div class="upload-list" id="uploadList" hidden>
-          <!-- thumbnails / file chips injected here -->
-        </div>
-
-        <div class="row right gap upload-actions" id="uploadActions" hidden>
-          <button class="btn outline small pill" id="clearFilesBtn">Clear all</button>
-        </div>
-      </div>
-
-      <div class="row gap wrap">
-        <select class="input pill" id="createWS"></select>
-        <select class="input pill" id="createProgress">
-          <option>Progress: final</option>
-          <option>Progress: improving</option>
-          <option>Progress: beginner</option>
-        </select>
-      </div>
-
-      <div class="row right gap">
-        <button class="btn outline pill" data-action="close-modal">Cancel</button>
-        <button class="btn primary pill" id="postSubmitBtn"><i data-lucide="send"></i>Post</button>
-      </div>
     </div>
-  </div>
 
-  <script src="app.js"></script>
+    <!-- Toast / Loader anchors -->
+    <div class="toast-wrap-center" id="toastWrap"></div>
+    <div class="mini-loader" id="miniLoader" aria-hidden="true">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
+
 </html>

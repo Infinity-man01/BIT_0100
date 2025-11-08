@@ -1,20 +1,19 @@
-/* Socia — Neon UI v3
-   - Neon theme, playful animations, pill styling
-   - Centered toasts, confirm dialogs, loader
-   - Multi-file upload with previews & removal
-   - "View Profile" action on cards
-   - Smooth screen transitions, improved micro-interactions
+/* Socia — Web3 Neon Build
+   Smart onboarding • Multi-workspace • Intent feed
+   Collab hub • Matchmaking • Talent requests
+   Growth & Badges • Neon animations
 */
 
-const SKILLS = ['Videography','Photography','Coding','Music','Illustration','Writing'];
+const SKILLS = ['Videography','Photography','Coding','Music','Illustration','Writing','3D','Sound','Color Grading'];
 const WORKSPACES = ['Videography','Photography','Coding'];
 
-const DUMMY_POSTS = Array.from({length:9}).map((_,i)=>({
+const DUMMY_POSTS = Array.from({length:12}).map((_,i)=>({
   id:i+1,
   author:`Creator ${i+1}`,
   skill: SKILLS[i % SKILLS.length],
+  intent: ['Showcase','Learn','Collab'][i%3],
   title:`Showcase ${i+1}`,
-  excerpt:`A short description of the work — crisp, focused, and calm.`,
+  excerpt:`A crisp, calm description that highlights the process and final touch.`,
   likes: Math.floor(Math.random()*300)+10
 }));
 
@@ -25,205 +24,171 @@ const DUMMY_COLLABS = Array.from({length:6}).map((_,i)=>({
   applicants: Math.floor(Math.random()*7)+1
 }));
 
-// --------------------------------------------------
-// Utilities
-// --------------------------------------------------
-const $ = (sel, root=document)=> root.querySelector(sel);
-const $$ = (sel, root=document)=> Array.from(root.querySelectorAll(sel));
+const BADGES = [
+  { icon:'sparkles', label:'First Post' },
+  { icon:'medal', label:'Rising Talent' },
+  { icon:'trophy', label:'Top Collab' },
+  { icon:'shield-check', label:'Verified Skill' },
+];
 
 const state = {
   selectedSkill: 'All',
+  selectedIntent: 'All',
+  workspaces: [...WORKSPACES],
+  currentWorkspace: WORKSPACES[0],
+  onboarding: { intent:null, skills:[], wss:[], level:null, prefs:[] },
+  metrics: { views: 1280, collabs: 12, saves: 94, kudos: 340 },
   loaderMinMs: 380
 };
 
-// Toasts (centered) --------------------------------
-let toastContainer;
-function ensureToastContainer(){
-  if(!toastContainer){
-    toastContainer = document.createElement('div');
-    toastContainer.className = 'toast-wrap-center';
-    document.body.appendChild(toastContainer);
-  }
-}
-function showToast(message, type='info', ms=2600){
-  ensureToastContainer();
+// ---------------- Utilities ----------------
+const $ = (s, r=document)=> r.querySelector(s);
+const $$ = (s, r=document)=> Array.from(r.querySelectorAll(s));
+
+function toast(msg, type='info', ms=2400){
+  const wrap = $('#toastWrap') || (()=>{const w=document.createElement('div');w.id='toastWrap';w.className='toast-wrap-center';document.body.appendChild(w);return w;})();
   const t = document.createElement('div');
   t.className = `toast-center ${type}`;
-  t.innerHTML = `
-    <span class="icon" data-lucide="${type==='success'?'check-circle':type==='error'?'alert-triangle':'sparkles'}"></span>
-    <div class="msg">${message}</div>
-    <button class="close" aria-label="Dismiss" title="Dismiss" data-lucide="x"></button>
-  `;
-  toastContainer.prepend(t);
-  lucide.createIcons();
-  requestAnimationFrame(()=> t.classList.add('show'));
-  const close = ()=> {
-    t.classList.remove('show');
-    setTimeout(()=> t.remove(), 220);
-  };
+  t.innerHTML = `<i class="icon" data-lucide="${type==='success'?'check-circle':type==='error'?'alert-triangle':'sparkles'}"></i><div class="msg">${msg}</div><button class="close"><i data-lucide="x"></i></button>`;
+  wrap.prepend(t); lucide.createIcons(); requestAnimationFrame(()=> t.classList.add('show'));
+  const close = ()=>{ t.classList.remove('show'); setTimeout(()=> t.remove(),180); };
   t.querySelector('.close').addEventListener('click', close);
   setTimeout(close, ms);
 }
 
-// Confirm dialog (Promise<boolean>) -----------------
 function confirmDialog({title='Are you sure?', message='This action can’t be undone.', okText='Confirm', cancelText='Cancel'}={}){
   return new Promise(resolve=>{
     const back = document.createElement('div');
     back.className = 'confirm-backdrop';
-    back.innerHTML = `
-      <div class="confirm-card">
-        <div class="confirm-title">${title}</div>
-        <div class="confirm-msg">${message}</div>
-        <div class="row gap-8">
-          <button class="btn outline pill" data-act="cancel">${cancelText}</button>
-          <button class="btn primary pill ml-auto" data-act="ok">${okText}</button>
-        </div>
-      </div>
-    `;
+    back.innerHTML = `<div class="confirm-card"><div class="confirm-title">${title}</div><div class="confirm-msg">${message}</div>
+      <div class="row gap-8"><button class="btn outline pill" data-act="cancel">${cancelText}</button><button class="btn primary pill ml-auto" data-act="ok">${okText}</button></div></div>`;
     document.body.appendChild(back);
     const card = back.querySelector('.confirm-card');
     requestAnimationFrame(()=> card.classList.add('show'));
-
-    function done(val){
-      card.classList.remove('show');
-      setTimeout(()=> back.remove(), 180);
-      resolve(val);
-    }
+    function done(val){ card.classList.remove('show'); setTimeout(()=> back.remove(),180); resolve(val); }
     back.addEventListener('click', (e)=> { if(e.target===back) done(false); });
     back.querySelector('[data-act="cancel"]').addEventListener('click', ()=> done(false));
     back.querySelector('[data-act="ok"]').addEventListener('click', ()=> done(true));
   });
 }
 
-// Mini loader --------------------------------------
-let loader;
-function ensureLoader(){
-  if(!loader){
-    loader = document.createElement('div');
-    loader.className = 'mini-loader';
-    loader.innerHTML = `<div class="spinner" aria-hidden="true"></div>`;
-    document.body.appendChild(loader);
-  }
-}
-async function withLoader(fn){
-  ensureLoader();
-  loader.classList.add('show');
-  const start = performance.now();
-  let result;
-  try{ result = await fn(); }
-  finally{
-    const elapsed = performance.now() - start;
-    const wait = Math.max(0, state.loaderMinMs - elapsed);
-    setTimeout(()=> loader.classList.remove('show'), wait);
-  }
-  return result;
+function showLoader(show=true){
+  const l = $('#miniLoader');
+  l.classList.toggle('show', show);
 }
 
-// --------------------------------------------------
-// Rendering
-// --------------------------------------------------
-function setActiveScreen(name){
+async function withLoader(fn){
+  showLoader(true);
+  const t0 = performance.now();
+  let res;
+  try{ res = await fn(); }
+  finally{
+    const d = performance.now()-t0;
+    const wait = Math.max(0, state.loaderMinMs - d);
+    setTimeout(()=> showLoader(false), wait);
+  }
+  return res;
+}
+
+// ---------------- Rendering ----------------
+function switchScreen(name){
   return withLoader(()=>{
-    $$('.screen').forEach(s=> s.removeAttribute('active'));
+    $$('[data-screen]').forEach(s=> s.removeAttribute('active'));
     const el = $(`#screen-${name}`);
     if(el){ el.setAttribute('active',''); }
-    $$('.nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.go === name));
-    $$('.mob-tab').forEach(b=> b.classList.toggle('active', b.dataset.go === name));
+    $$('.nav .nav-btn').forEach(b=> b.classList.toggle('active', b.dataset.go === name));
+    $$('.mobile-nav .mob-tab').forEach(b=> b.classList.toggle('active', b.dataset.go === name));
   });
 }
 
-function renderWorkspaces(){
-  const wsList = $('#workspaceList');
-  wsList.innerHTML = '';
-  ['All', ...WORKSPACES].forEach(w=>{
+function renderWorkspaceLists(){
+  const list = $('#workspaceList');
+  list.innerHTML = '';
+  ['All',...state.workspaces].forEach((ws,i)=>{
     const b = document.createElement('button');
-    b.className = 'ws-item';
-    if(w === state.selectedSkill) b.classList.add('active');
-    b.textContent = w;
-    b.title = `Switch to ${w} workspace`;
+    b.className = 'ws-item pill';
+    b.textContent = ws;
+    if((state.selectedSkill==='All' && i===0) || ws===state.selectedSkill) b.classList.add('active');
     b.addEventListener('click', ()=>{
-      state.selectedSkill = w;
-      $('#homeSkillLabel').textContent = w==='All' ? 'All skills' : w;
+      state.selectedSkill = ws;
+      $('#homeSkillLabel').textContent = ws==='All'?'All skills':ws;
       renderHome();
-      renderWorkspaces();
-      showToast(`Workspace set to <b>${w}</b>`, 'info', 1800);
+      $$('.ws-item', list).forEach(x=> x.classList.remove('active'));
+      b.classList.add('active');
+      toast(`Workspace switched to <b>${ws}</b>`, 'info', 1600);
     });
-    wsList.appendChild(b);
+    list.appendChild(b);
   });
 
-  // profile + settings chips
-  const profileWS = $('#profileWS');
-  profileWS.innerHTML='';
-  WORKSPACES.forEach(w=>{
-    const c = document.createElement('button');
-    c.className='chip pill';
-    c.textContent=w;
-    profileWS.appendChild(c);
-  });
-  const settingsWS = $('#settingsWS');
-  settingsWS.innerHTML='';
-  WORKSPACES.forEach(w=>{
-    const c = document.createElement('button');
-    c.className='chip pill';
-    c.textContent=w;
-    settingsWS.appendChild(c);
+  // quick switch dropdown
+  const sw = $('#wsSwitcher');
+  sw.innerHTML = state.workspaces.map(w=>`<option ${w===state.currentWorkspace?'selected':''}>${w}</option>`).join('');
+  sw.onchange = ()=>{
+    state.currentWorkspace = sw.value;
+    toast(`Current workspace: <b>${state.currentWorkspace}</b>`, 'success', 1400);
+  };
+
+  // profile chips
+  const pws = $('#profileWS'); pws.innerHTML='';
+  state.workspaces.forEach(w=>{
+    const c = document.createElement('button'); c.className='chip pill'; c.textContent=w;
+    c.addEventListener('click', ()=> toast(`Viewing ${w} portfolio`, 'info', 1200));
+    pws.appendChild(c);
   });
 
-  // modal select
-  const createWS = $('#createWS');
-  createWS.innerHTML = '<option>Choose workspace</option>' + WORKSPACES.map(w=>`<option>${w}</option>`).join('');
+  // settings
+  const sws = $('#settingsWS'); sws.innerHTML='';
+  state.workspaces.forEach(w=>{
+    const c = document.createElement('button'); c.className='chip pill active'; c.textContent=w;
+    c.addEventListener('click', ()=> c.classList.toggle('active'));
+    sws.appendChild(c);
+  });
+
+  // modal create selector
+  const sel = $('#createWS');
+  sel.innerHTML = state.workspaces.map(w=>`<option>${w}</option>`).join('');
 }
 
-function cardPost(post){
-  const div = document.createElement('div');
-  div.className = 'card glass floaty';
-  div.innerHTML = `
-    <div class="card-media">${post.skill}</div>
-    <div class="card-title">${post.title}</div>
-    <div class="card-desc">${post.excerpt}</div>
+function postCard(p){
+  const el = document.createElement('div');
+  el.className = 'card glass floaty';
+  el.innerHTML = `
+    <div class="card-media">${p.skill} • ${p.intent}</div>
+    <div class="card-title">${p.title}</div>
+    <div class="card-desc">${p.excerpt}</div>
     <div class="card-line">
+      <span class="muted small">@${p.author.toLowerCase().replace(/\s+/g,'')}</span>
       <div class="reacts">
-        <button class="like-btn pill"><i data-lucide="heart"></i> <span class="like-count">${post.likes}</span></button>
-        <button class="comment-btn pill"><i data-lucide="message-square"></i> Comment</button>
+        <button class="pill like"><i data-lucide="heart"></i><span>${p.likes}</span></button>
+        <button class="pill comment"><i data-lucide="message-square"></i>Comment</button>
+        <button class="pill save"><i data-lucide="bookmark"></i>Save</button>
+        <button class="chip pill view"><i data-lucide="user"></i>View Profile</button>
       </div>
-      <div class="row gap">
-        <button class="chip pill view-profile">View Profile</button>
-        <button class="chip pill collab-chip">Collab</button>
-      </div>
-    </div>
-  `;
-  // interactions
-  const likeBtn = $('.like-btn', div);
-  const likeCountEl = $('.like-count', div);
-  likeBtn.addEventListener('click', ()=>{
-    const n = parseInt(likeCountEl.textContent || '0', 10) + 1;
-    likeCountEl.textContent = n;
-    showToast('Appreciated ❤️', 'success', 1200);
-  });
-  $('.comment-btn', div).addEventListener('click', ()=>{
-    showToast('Comments are coming soon. For now, send a collab request!', 'info', 2200);
-  });
-  $('.collab-chip', div).addEventListener('click', ()=>{
-    showToast('Collab request sent to the creator 🎬', 'success', 2000);
-  });
-  $('.view-profile', div).addEventListener('click', async ()=>{
-    await setActiveScreen('profile');
-    showToast(`Viewing <b>${post.author}</b>'s profile`, 'info', 1800);
-  });
-  return div;
+    </div>`;
+  $('.like', el).onclick = ()=>{
+    const span = $('.like span', el);
+    span.textContent = Number(span.textContent)+1;
+    toast('Kudos sent ❤️', 'success', 1200);
+  };
+  $('.comment', el).onclick = ()=> toast('Comments arriving soon!', 'info', 1400);
+  $('.save', el).onclick = ()=> toast('Saved to your workspace.', 'success', 1400);
+  $('.view', el).onclick = async ()=> { await switchScreen('profile'); toast(`Viewing <b>${p.author}</b>`, 'info', 1500); };
+  return el;
 }
 
 function renderHome(){
-  const grid = $('#homeGrid');
-  grid.innerHTML = '';
-  DUMMY_POSTS.filter(p => state.selectedSkill==='All' || p.skill===state.selectedSkill)
-    .forEach(p=> grid.appendChild(cardPost(p)));
+  const grid = $('#homeGrid'); grid.innerHTML='';
+  const filtered = DUMMY_POSTS.filter(p=>{
+    const skillOK = (state.selectedSkill==='All') || (p.skill===state.selectedSkill);
+    const intentOK = (state.selectedIntent==='All') || (p.intent===state.selectedIntent);
+    return skillOK && intentOK;
+  });
+  filtered.forEach(p=> grid.appendChild(postCard(p)));
   lucide.createIcons();
 }
 
 function renderExplore(){
-  const cat = $('#exploreCats');
-  cat.innerHTML = '';
+  const cat = $('#exploreCats'); cat.innerHTML='';
   SKILLS.forEach(s=>{
     const div = document.createElement('div');
     div.className = 'cat-tile';
@@ -231,312 +196,295 @@ function renderExplore(){
     div.addEventListener('click', ()=>{
       state.selectedSkill = s;
       $('#homeSkillLabel').textContent = s;
+      $$('.ws-item').forEach(x=> x.classList.toggle('active', x.textContent===s));
       renderHome();
-      showToast(`Filtering Home by <b>${s}</b>`, 'info', 1700);
-      setActiveScreen('home');
+      toast(`Filtering Home by <b>${s}</b>`, 'info', 1700);
+      switchScreen('home');
     });
     cat.appendChild(div);
   });
 
-  const spot = $('#spotlightGrid');
-  spot.innerHTML = '';
+  const spot = $('#spotlightGrid'); spot.innerHTML='';
   DUMMY_POSTS.slice(0,3).forEach(p=>{
-    const c = document.createElement('div');
-    c.className='card glass floaty';
+    const c = document.createElement('div'); c.className='card glass floaty';
     c.innerHTML = `<div class="card-title">${p.title}</div><div class="card-desc">${p.excerpt}</div>`;
     spot.appendChild(c);
   });
 }
 
 function renderCollab(){
-  const grid = $('#collabGrid');
-  grid.innerHTML = '';
+  const grid = $('#collabGrid'); grid.innerHTML='';
   DUMMY_COLLABS.forEach(c=>{
-    const card = document.createElement('div');
-    card.className='card glass floaty';
+    const card = document.createElement('div'); card.className='card glass floaty';
     card.innerHTML = `
-      <div class="card-title">${c.title}</div>
-      <div class="card-desc">Skills: ${c.skills.join(', ')}</div>
+      <div class="row gap"><i data-lucide="handshake"></i><div class="title">${c.title}</div></div>
+      <div class="muted small" style="margin-top:6px">Skills: ${c.skills.join(', ')}</div>
       <div class="row gap" style="margin-top:10px">
-        <div class="row gap small muted">
-          <div class="chip pill">Applicants: ${c.applicants}</div>
-        </div>
+        <div class="chip pill">Applicants: ${c.applicants}</div>
         <div class="row gap" style="margin-left:auto">
           <button class="btn outline pill view-btn">View</button>
           <button class="btn primary pill apply-btn"><i data-lucide="rocket"></i>Apply</button>
         </div>
-      </div>
-    `;
-    $('.view-btn', card).addEventListener('click', ()=>{
-      showToast('Opening project brief…', 'info', 1400);
-    });
-    $('.apply-btn', card).addEventListener('click', async ()=>{
-      const ok = await confirmDialog({
-        title:'Apply to this project?',
-        message:'We’ll share your workspace portfolio and contact email with the project owner.',
-        okText:'Send Application',
-        cancelText:'Cancel'
-      });
-      if(ok){
-        showToast('Application submitted. Good luck! ✨', 'success', 2200);
-      }else{
-        showToast('Application canceled.', 'info', 1600);
-      }
-    });
+      </div>`;
+    $('.view-btn', card).onclick = ()=> toast('Opening brief…', 'info', 1200);
+    $('.apply-btn', card).onclick = async ()=>{
+      const ok = await confirmDialog({title:'Apply to this project?', message:'We’ll share your selected workspace portfolio and contact email.', okText:'Send Application', cancelText:'Cancel'});
+      toast(ok ? 'Application sent ✨' : 'Application canceled', ok?'success':'info', 1800);
+    };
     grid.appendChild(card);
   });
-}
-
-// --------------------------------------------------
-// Create Modal & Multi-file Upload
-// --------------------------------------------------
-function bytesToSize(bytes){
-  if(!bytes && bytes !== 0) return '';
-  const sizes=['B','KB','MB','GB']; const i = Math.min(Math.floor(Math.log(bytes)/Math.log(1024)), sizes.length-1);
-  return `${(bytes/Math.pow(1024,i)).toFixed(i?1:0)} ${sizes[i]}`;
-}
-
-function openModal(){
-  const m = $('#createModal');
-  m.classList.add('open');
-  m.setAttribute('aria-hidden','false');
   lucide.createIcons();
+}
 
-  // Elements
-  const fileInput = $('#fileInput');
-  const browseBtn = $('#browseBtn');
-  const uploadBox = $('#uploadBox');
-  const uploadList = $('#uploadList');
-  const uploadPlaceholder = $('#uploadPlaceholder');
-  const uploadActions = $('#uploadActions');
-  const clearFilesBtn = $('#clearFilesBtn');
-  const postBtn = $('#postSubmitBtn');
+function renderMatch(){
+  const grid = $('#matchGrid'); grid.innerHTML='';
+  // naive matches based on current workspace + onboarding intent/skills
+  const intent = state.onboarding.intent || 'Showcase';
+  const skills = state.onboarding.skills.length ? state.onboarding.skills : [state.currentWorkspace];
+  const matches = DUMMY_POSTS
+    .filter(p => skills.includes(p.skill) || p.intent===intent)
+    .slice(0,6);
+  if(matches.length===0){ grid.innerHTML = `<div class="card glass">No matches yet — try adding more skills or switching intent.</div>`; return; }
+  matches.forEach(m=> grid.appendChild(postCard(m)));
+  lucide.createIcons();
+}
 
-  // Working store for this modal session
-  let files = []; // [{file, dataUrl?}]
+function renderDashboard(){
+  $('#statViews').textContent = state.metrics.views;
+  $('#statCollabs').textContent = state.metrics.collabs;
+  $('#statSaves').textContent = state.metrics.saves;
+  $('#statKudos').textContent = state.metrics.kudos;
 
-  const MAX_FILES = 10;
-  const MAX_SIZE = 20 * 1024 * 1024; // 20MB
+  const b = $('#badgeWrap'); b.innerHTML='';
+  BADGES.forEach(({icon,label})=>{
+    const el = document.createElement('div'); el.className='badge';
+    el.innerHTML = `<i data-lucide="${icon}"></i><span>${label}</span>`;
+    b.appendChild(el);
+  });
 
-  function refreshUploadUI(){
-    if(files.length === 0){
-      uploadPlaceholder.hidden = false;
-      uploadList.hidden = true;
-      uploadActions.hidden = true;
-      uploadList.innerHTML = '';
-      return;
-    }
-    uploadPlaceholder.hidden = true;
-    uploadList.hidden = false;
-    uploadActions.hidden = false;
+  const sc = $('#skillsCloud'); sc.innerHTML='';
+  const all = new Set([...SKILLS.slice(0,6), ...state.onboarding.skills]);
+  [...all].forEach(s=>{
+    const chip = document.createElement('div'); chip.className='skill-bubble'; chip.textContent=s;
+    sc.appendChild(chip);
+  });
+  lucide.createIcons();
+}
 
-    uploadList.innerHTML = '';
-    files.forEach((item, idx)=>{
-      const tile = document.createElement('div');
-      tile.className = 'file-tile';
+function renderProfile(){
+  $('#profileName').textContent = 'Creator Name';
+  $('#profileRole').textContent = `${state.workspaces.length} workspaces • ${state.onboarding.level||'—'} level`;
+  const port = $('#profilePortfolio'); port.innerHTML='';
+  DUMMY_POSTS.slice(0,4).forEach(p=>{
+    const c = document.createElement('div'); c.className='card glass';
+    c.innerHTML = `<div class="card-media">${p.skill}</div><div class="card-title">${p.title}</div><div class="muted small">Intent: ${p.intent}</div>`;
+    port.appendChild(c);
+  });
+  lucide.createIcons();
+}
 
-      const thumb = document.createElement('div');
-      thumb.className = 'file-thumb';
+// ---------------- Onboarding flow ----------------
+let onbStep = 1;
+function goOnbStep(step){
+  onbStep = step;
+  $('#onbStepLabel').textContent = `Step ${step} of 3`;
+  $$('.onb-step').forEach(s=> s.hidden = (s.dataset.step != step));
+}
 
-      if(item.dataUrl){ // image preview
-        const img = document.createElement('img');
-        img.src = item.dataUrl;
-        thumb.appendChild(img);
-      }else{
-        const icon = document.createElement('i');
-        icon.setAttribute('data-lucide', 'file');
-        thumb.appendChild(icon);
-      }
+function setupOnboarding(){
+  // step 1: intents & skills
+  const wrap = $('#onbSkills'); wrap.innerHTML='';
+  SKILLS.forEach(s=>{
+    const b = document.createElement('button'); b.className='chip pill'; b.textContent=s;
+    b.onclick = ()=>{ b.classList.toggle('active'); toggleInArray(state.onboarding.skills, s); };
+    wrap.appendChild(b);
+  });
+  $('#intentChips').addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    $$('#intentChips .chip').forEach(x=> x.classList.remove('active'));
+    b.classList.add('active'); state.onboarding.intent = b.dataset.intent;
+  });
 
-      const meta = document.createElement('div');
-      meta.className = 'file-meta';
-      meta.innerHTML = `<div class="file-name" title="${item.file.name}">${item.file.name}</div>
-                        <div class="file-size">${bytesToSize(item.file.size)}</div>`;
+  // step 2: workspaces & level
+  const wwrap = $('#onbWorkspaceChips'); wwrap.innerHTML='';
+  WORKSPACES.concat('Music','Writing','3D').forEach(w=>{
+    const c = document.createElement('button'); c.className='chip pill'; c.textContent=w;
+    c.onclick = ()=>{ c.classList.toggle('active'); toggleInArray(state.onboarding.wss, w); };
+    wwrap.appendChild(c);
+  });
+  $('#onbLevel').addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    $$('#onbLevel .chip').forEach(x=> x.classList.remove('active'));
+    b.classList.add('active'); state.onboarding.level = b.dataset.level;
+  });
 
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'file-remove';
-      removeBtn.textContent = 'Remove';
-      removeBtn.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        files.splice(idx,1);
-        refreshUploadUI();
-        showToast('File removed', 'info', 1200);
-      });
+  // step 3: prefs
+  $$('#onbStep3 .chip').forEach(c=>{
+    c.onclick = ()=> c.classList.toggle('active');
+  });
 
-      tile.appendChild(thumb);
-      tile.appendChild(meta);
-      tile.appendChild(removeBtn);
-      uploadList.appendChild(tile);
+  // nav
+  $('[data-action="onb-next"]').onclick = async ()=>{
+    if(onbStep<3){ goOnbStep(onbStep+1); return; }
+    // finish
+    // merge onboarding workspaces into state
+    state.workspaces = Array.from(new Set([...state.workspaces, ...state.onboarding.wss]));
+    state.currentWorkspace = state.workspaces[0] || 'Videography';
+    await switchScreen('home');
+    renderWorkspaceLists();
+    renderHome();
+    toast('Onboarding complete. Welcome ✨', 'success', 1800);
+  };
+  $('[data-action="onb-prev"]').onclick = ()=> { if(onbStep>1) goOnbStep(onbStep-1); else switchScreen('splash'); };
+}
+
+function toggleInArray(arr, item){
+  const i = arr.indexOf(item);
+  if(i>=0) arr.splice(i,1); else arr.push(item);
+}
+
+// ---------------- Modals (Create / Talent) ----------------
+function modalOpen(id, open=true){
+  const m = $(id);
+  if(!m) return;
+  if(open){ m.classList.add('open'); m.setAttribute('aria-hidden','false'); }
+  else { m.classList.remove('open'); m.setAttribute('aria-hidden','true'); }
+  setTimeout(()=> lucide.createIcons(), 0);
+}
+
+function setupCreateModal(){
+  document.body.addEventListener('click', e=>{
+    const open = e.target.closest('[data-action="open-create"]');
+    const close = e.target.closest('[data-action="close-modal"]');
+    if(open) modalOpen('#createModal', true);
+    if(close || e.target.closest('#createModal .backdrop')) modalOpen('#createModal', false);
+  });
+
+  const input = $('#fileInput'), browse = $('#browseBtn');
+  const box = $('#uploadBox'), list = $('#uploadList'), placeholder = $('#uploadPlaceholder'), actions = $('#uploadActions');
+  let files = [];
+  const MAX_FILES = 10, MAX_SIZE = 20*1024*1024;
+
+  function refresh(){
+    if(files.length===0){ placeholder.hidden=false; list.hidden=true; actions.hidden=true; list.innerHTML=''; return; }
+    placeholder.hidden=true; list.hidden=false; actions.hidden=false; list.innerHTML='';
+    files.forEach((f,idx)=>{
+      const tile = document.createElement('div'); tile.className='file-tile';
+      const thumb = document.createElement('div'); thumb.className='file-thumb';
+      if(f.type.startsWith('image/')){ const img=new Image(); img.src=URL.createObjectURL(f); img.onload=()=>URL.revokeObjectURL(img.src); thumb.appendChild(img); }
+      else { thumb.innerHTML = `<i data-lucide="file"></i>`; }
+      const meta = document.createElement('div'); meta.className='file-meta';
+      meta.innerHTML = `<div class="file-name">${f.name}</div><div class="file-size">${prettySize(f.size)}</div>`;
+      const rm = document.createElement('button'); rm.className='file-remove pill'; rm.textContent='Remove'; rm.onclick=()=>{ files.splice(idx,1); refresh(); toast('File removed','info',1200); };
+      tile.append(thumb, meta, rm); list.appendChild(tile);
     });
-
     lucide.createIcons();
   }
-
-  function addFiles(fileList){
-    let added = 0;
-    for(const f of fileList){
-      if(files.length >= MAX_FILES) { showToast('Max 10 files allowed.', 'error', 1600); break; }
-      if(f.size > MAX_SIZE){ showToast(`${f.name} is larger than 20MB`, 'error', 2000); continue; }
-
-      const item = { file: f, dataUrl: null };
-      files.push(item); added++;
-
-      if(f.type.startsWith('image/')){
-        const reader = new FileReader();
-        reader.onload = ()=> { item.dataUrl = reader.result; refreshUploadUI(); };
-        reader.readAsDataURL(f);
-      }
-    }
-    if(added>0) refreshUploadUI();
-    if(added===0 && fileList.length>0) showToast('No files added. Check size/type limits.', 'error', 2000);
+  function prettySize(n){ if(n<1024) return `${n} B`; if(n<1024*1024) return `${(n/1024).toFixed(1)} KB`; return `${(n/1024/1024).toFixed(1)} MB`; }
+  function add(filesIn){
+    let added=0;
+    [...filesIn].forEach(f=>{
+      if(files.length>=MAX_FILES) return toast('Max 10 files reached','error',1600);
+      if(f.size>MAX_SIZE) return toast(`${f.name} > 20MB`,'error',1600);
+      files.push(f); added++;
+    });
+    refresh(); if(added>0) toast(`${added} file(s) added`,'success',1200);
   }
 
-  // Wire browse + input
-  browseBtn.addEventListener('click', (e)=>{ e.stopPropagation(); fileInput.click(); });
-  uploadBox.addEventListener('click', ()=> fileInput.click());
-  fileInput.addEventListener('change', ()=> addFiles(fileInput.files));
+  browse.onclick = (e)=>{ e.preventDefault(); input.click(); };
+  input.onchange = ()=> add(input.files);
+  ;['dragenter','dragover'].forEach(evt=> box.addEventListener(evt, e=>{ e.preventDefault(); box.classList.add('dragover'); }));
+  ;['dragleave','drop'].forEach(evt=> box.addEventListener(evt, e=>{ e.preventDefault(); box.classList.remove('dragover'); }));
+  box.addEventListener('drop', e=> add(e.dataTransfer.files));
+  $('#clearFilesBtn').onclick = ()=>{ files=[]; input.value=''; refresh(); toast('All files cleared','info',1200); };
 
-  // Drag & drop
-  uploadBox.addEventListener('dragenter', (e)=>{ e.preventDefault(); uploadBox.classList.add('dragover'); });
-  uploadBox.addEventListener('dragover', (e)=>{ e.preventDefault(); });
-  uploadBox.addEventListener('dragleave', (e)=>{ if(e.target===uploadBox) uploadBox.classList.remove('dragover'); });
-  uploadBox.addEventListener('drop', (e)=>{
-    e.preventDefault();
-    uploadBox.classList.remove('dragover');
-    if(e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files);
-  });
-
-  // Clear all
-  clearFilesBtn.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    files = [];
-    fileInput.value = '';
-    refreshUploadUI();
-    showToast('All files cleared', 'info', 1400);
-  });
-
-  // Submit Post
-  postBtn.replaceWith(postBtn.cloneNode(true));
-  const newPostBtn = $('#postSubmitBtn');
-  newPostBtn.addEventListener('click', ()=>{
-    const title = $('#createTitle')?.value?.trim();
-    if(!title){
-      showToast('Please add a title before posting.', 'error', 2200);
-      return;
-    }
-    const count = files.length;
-    closeModal();
-    setTimeout(()=> showToast(
-      count>0 ? `Post published with <b>${count}</b> file${count>1?'s':''} 🚀` : 'Post published successfully 🚀',
-      'success', 2400
-    ), 180);
-  });
-
-  // Close buttons (deduped)
-  $$('#createModal [data-action="close-modal"]').forEach(b=>{
-    b.replaceWith(b.cloneNode(true));
-  });
-  $$('#createModal [data-action="close-modal"]').forEach(b=> b.addEventListener('click', closeModal));
+  $('#postSubmitBtn').onclick = ()=>{
+    const t = $('#createTitle').value.trim();
+    if(!t) return toast('Please add a title','error',1600);
+    modalOpen('#createModal', false);
+    toast('Post published 🚀','success',1800);
+  };
 }
 
-function closeModal(){
-  const m = $('#createModal');
-  m.classList.remove('open');
-  m.setAttribute('aria-hidden','true');
+function setupTalentModal(){
+  const openers = ['#openTalentReq','#openTalentReq2'];
+  openers.forEach(id=> $(id).onclick = ()=> modalOpen('#talentModal', true));
+  document.body.addEventListener('click', e=>{
+    const close = e.target.closest('[data-action="close-talent"]');
+    if(close || e.target.closest('#talentModal .backdrop')) modalOpen('#talentModal', false);
+  });
+  $('#talentSubmit').onclick = ()=>{
+    const role = $('#talRole').value.trim();
+    if(!role) return toast('Role is required','error',1600);
+    modalOpen('#talentModal', false);
+    toast('Talent request posted ✨','success',1800);
+  };
 }
 
-// --------------------------------------------------
-// Nav & Settings
-// --------------------------------------------------
+// ---------------- Wiring ----------------
 function wireNav(){
-  // Desktop sidebar nav
-  $$('.nav-btn').forEach(btn=>{
+  $$('.nav .nav-btn').forEach(btn=>{
     const go = btn.dataset.go;
-    const openCreate = btn.dataset.action === 'open-create';
-    btn.addEventListener('click', ()=>{
-      if(openCreate) return openModal();
-      if(go){ setActiveScreen(go); }
-    });
-    btn.title = btn.textContent.trim();
+    const isCreate = btn.dataset.action === 'open-create';
+    btn.onclick = ()=>{ if(isCreate) return modalOpen('#createModal', true); if(go) switchScreen(go); };
   });
-  // Mobile nav
-  $$('.mob-tab').forEach(btn=>{
-    btn.addEventListener('click', ()=> setActiveScreen(btn.dataset.go));
-    btn.title = btn.textContent.trim();
-  });
-  $$('.fab,[data-action="open-create"]').forEach(btn=>{
-    btn.addEventListener('click', openModal);
-    btn.title = 'Create a new post';
+  $$('.mobile-nav .mob-tab').forEach(btn=> btn.onclick = ()=> switchScreen(btn.dataset.go));
+  $('.neon-fab')?.addEventListener('click', ()=> modalOpen('#createModal', true));
+}
+
+function wireFeedIntent(){
+  $('#feedIntents').addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    $$('#feedIntents .chip').forEach(x=> x.classList.remove('active'));
+    b.classList.add('active');
+    state.selectedIntent = b.dataset.intent;
+    renderHome();
   });
 }
 
 function wireSettings(){
-  // Logout confirmation
-  const logoutBtn = $('#screen-settings .btn.outline');
-  if(logoutBtn){
-    logoutBtn.addEventListener('click', async (e)=>{
-      e.preventDefault();
-      const ok = await confirmDialog({
-        title:'Logout?',
-        message:'You can always log back in. We’ll keep your workspaces safe.',
-        okText:'Logout',
-        cancelText:'Stay'
-      });
-      if(ok){
-        await setActiveScreen('splash');
-        showToast('You’ve been logged out.', 'info', 1800);
-      }else{
-        showToast('Still here. Let’s build more! 💡', 'success', 1500);
-      }
-    });
-  }
+  $('#saveSettings').onclick = ()=> toast('Settings saved','success',1400);
+  $('#logoutBtn').onclick = async ()=>{
+    const ok = await confirmDialog({title:'Logout?', message:'You can log back in anytime. We’ll keep your workspaces safe.', okText:'Logout', cancelText:'Stay'});
+    if(ok){ await switchScreen('splash'); toast('You are logged out.','info',1600); } else { toast('Still here — let’s build!','success',1400); }
+  };
 }
 
-// --------------------------------------------------
-// Boot
-// --------------------------------------------------
+// ---------------- Boot ----------------
 document.addEventListener('DOMContentLoaded', ()=>{
-  // start on splash
-  setActiveScreen('splash');
+  lucide.createIcons();
+  // start at splash
+  switchScreen('splash');
 
-  // data-driven renders
-  renderWorkspaces();
+  // Render core
+  renderWorkspaceLists();
   renderHome();
   renderExplore();
   renderCollab();
+  renderDashboard();
+  renderProfile();
 
-  // wiring
+  // Onboarding
+  setupOnboarding(); goOnbStep(1);
+
+  // Modals
+  setupCreateModal();
+  setupTalentModal();
+
+  // Matchmaking button
+  $('#findMatches').onclick = async ()=> { await withLoader(()=> renderMatch()); toast('Matches updated','success',1200); };
+
+  // Intent chips on Home
+  wireFeedIntent();
+
+  // Nav & Settings
   wireNav();
   wireSettings();
 
-  // icons
-  lucide.createIcons();
-
-  // onboarding skill chips (interactive toggle)
-  const onbWrap = $('#onbSkills');
-  if(onbWrap){
-    onbWrap.innerHTML = '';
-    SKILLS.forEach(s=>{
-      const b = document.createElement('button');
-      b.className = 'chip pill';
-      b.textContent = s;
-      b.addEventListener('click', ()=> b.classList.toggle('active'));
-      onbWrap.appendChild(b);
-    });
-  }
-
-  // global [data-go] for splash/onboarding buttons
-  $$('[data-go]').forEach(b=>{
-    b.addEventListener('click', async ()=>{
-      const target = b.dataset.go;
-      await setActiveScreen(target);
-      if(target==='home'){
-        showToast('Welcome back! Ready to create? ✨', 'info', 2200);
-      }
-    });
-  });
-
-  // "Begin your journey" instant toast
-  const beginBtn = $('[data-go="onboarding"]');
-  beginBtn?.addEventListener('click', ()=> showToast('Let’s set up your creative universe.', 'success', 1600));
+  // Global data-go (CTA buttons)
+  $$('[data-go]').forEach(b=> b.addEventListener('click', async ()=> {
+    const target = b.dataset.go;
+    await switchScreen(target);
+    if(target==='home') toast('Welcome back! ✨','info',1600);
+  }));
 });
